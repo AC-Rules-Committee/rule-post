@@ -178,7 +178,7 @@ class _CopyButtons extends StatelessWidget {
           },
         ),
         IconButton(
-          icon: const Icon(Icons.copy_all, size: 18),
+          icon: const Icon(Icons.content_paste, size: 18),
           tooltip: 'Copy as rich text',
           onPressed: () => _copyAsHtml(context, text),
         ),
