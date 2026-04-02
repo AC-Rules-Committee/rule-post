@@ -1,10 +1,10 @@
 // flutter_app/lib/content/widgets/detail_scaffold.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:rule_post/content/widgets/header_block.dart';
 import 'package:rule_post/content/widgets/section_card.dart';
 import 'package:rule_post/content/widgets/status_card.dart';
-
 
 // Used in the enquiry and response detail pages
 class DetailScaffold extends StatelessWidget {
@@ -16,7 +16,9 @@ class DetailScaffold extends StatelessWidget {
     this.headerButton,
     this.headerColour,
     this.summary,
+    this.summaryText,
     this.commentary,
+    this.commentaryText,
     this.attachments = const <Widget>[],
     this.footer,
     this.adminPanel,
@@ -26,15 +28,18 @@ class DetailScaffold extends StatelessWidget {
   final List<String> headerLines;
   final List<String> subHeaderLines;
   final Widget? headerButton;
-  final Color? headerColour;            // allows the header to be coloured by author (for responses)
-  final Widget? meta;                   // usually MetaChips (+ optional status chips)
-  final Widget? summary;                // null => hide section
-  final Widget? commentary;             // null => hide section
-  final List<Widget> attachments;       // empty => hide section
-  final Widget? footer;                 // usually Children card; null => hide
-  final Widget? adminPanel;             // only shows for admins; null => hide
-  final Map<String, dynamic>? stageMap; // isOpen, teamsCanRespond, teamsCanComment, stageStarts, stageEnds
-
+  final Color?
+  headerColour; // allows the header to be coloured by author (for responses)
+  final Widget? meta; // usually MetaChips (+ optional status chips)
+  final Widget? summary; // null => hide section
+  final String? summaryText; // raw markdown for clipboard
+  final Widget? commentary; // null => hide section
+  final String? commentaryText; // raw markdown for clipboard
+  final List<Widget> attachments; // empty => hide section
+  final Widget? footer; // usually Children card; null => hide
+  final Widget? adminPanel; // only shows for admins; null => hide
+  final Map<String, dynamic>?
+  stageMap; // isOpen, teamsCanRespond, teamsCanComment, stageStarts, stageEnds
 
   @override
   Widget build(BuildContext context) {
@@ -73,22 +78,27 @@ class DetailScaffold extends StatelessWidget {
           ),
 
           // STAGE CARD (optional)
-          if (stageMap != null && stageMap!['isOpen'] && stageMap!['isPublished']) ...[
+          if (stageMap != null &&
+              stageMap!['isOpen'] &&
+              stageMap!['isPublished']) ...[
             const SizedBox(height: 12),
             SectionCard(
               title: 'Enquiry Stage',
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: StatusCard(stageMap: stageMap!)
+                child: StatusCard(stageMap: stageMap!),
               ),
             ),
           ],
 
-          // CONTENT CARD (optional)
+          // SUMMARY CARD (optional)
           if (summary != null) ...[
             const SizedBox(height: 12),
             SectionCard(
               title: 'Summary',
+              trailing: summaryText != null && summaryText!.isNotEmpty
+                  ? _CopyButton(text: summaryText!)
+                  : null,
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: summary!,
@@ -96,11 +106,14 @@ class DetailScaffold extends StatelessWidget {
             ),
           ],
 
-          // CONTENT CARD (optional)
+          // DETAILS CARD (optional)
           if (commentary != null) ...[
             const SizedBox(height: 12),
             SectionCard(
               title: 'Details',
+              trailing: commentaryText != null && commentaryText!.isNotEmpty
+                  ? _CopyButton(text: commentaryText!)
+                  : null,
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: commentary!,
@@ -116,20 +129,15 @@ class DetailScaffold extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final w in attachments) Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: w,
-                  ),
+                  for (final w in attachments)
+                    Padding(padding: const EdgeInsets.only(top: 8), child: w),
                 ],
               ),
             ),
           ],
 
           // FOOTER (usually children section card)
-          if (footer != null) ...[
-            const SizedBox(height: 12),
-            footer!,
-          ],
+          if (footer != null) ...[const SizedBox(height: 12), footer!],
 
           // ADMIN PANEL
           if (adminPanel != null) ...[
@@ -139,6 +147,28 @@ class DetailScaffold extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _CopyButton extends StatelessWidget {
+  const _CopyButton({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.copy, size: 18),
+      tooltip: 'Copy markdown',
+      onPressed: () {
+        Clipboard.setData(ClipboardData(text: text));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Markdown copied to clipboard'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
     );
   }
 }

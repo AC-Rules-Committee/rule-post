@@ -201,8 +201,10 @@ class _ResponseDetailPageState extends ConsumerState<ResponseDetailPage> {
 
             // SUMMARY
             summary: summary.isEmpty ? null : MarkdownDisplay(summary),
+            summaryText: summary,
             // COMMENTARY
             commentary: text.isEmpty ? null : MarkdownDisplay(text),
+            commentaryText: text,
             // ATTACHMENTS
             attachments: attachments
                 .map(

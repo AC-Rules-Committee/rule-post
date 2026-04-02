@@ -149,6 +149,7 @@ class _EnquiryDetailPageState extends ConsumerState<EnquiryDetailPage> {
             'stageEnds': stageEnds,
           },
           commentary: postText.isEmpty ? null : MarkdownDisplay(postText),
+          commentaryText: postText,
           attachments: attachments
               .map(
                 (m) => FancyAttachmentTile.fromMap(
