@@ -1,6 +1,10 @@
 // flutter_app/lib/content/widgets/detail_scaffold.dart
+import 'dart:js_interop';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:markdown/markdown.dart' as md;
+import 'package:web/web.dart' as web;
 
 import 'package:rule_post/content/widgets/header_block.dart';
 import 'package:rule_post/content/widgets/section_card.dart';
@@ -97,7 +101,7 @@ class DetailScaffold extends StatelessWidget {
             SectionCard(
               title: 'Summary',
               trailing: summaryText != null && summaryText!.isNotEmpty
-                  ? _CopyButton(text: summaryText!)
+                  ? _CopyButtons(text: summaryText!)
                   : null,
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -112,7 +116,7 @@ class DetailScaffold extends StatelessWidget {
             SectionCard(
               title: 'Details',
               trailing: commentaryText != null && commentaryText!.isNotEmpty
-                  ? _CopyButton(text: commentaryText!)
+                  ? _CopyButtons(text: commentaryText!)
                   : null,
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -151,24 +155,56 @@ class DetailScaffold extends StatelessWidget {
   }
 }
 
-class _CopyButton extends StatelessWidget {
-  const _CopyButton({required this.text});
+class _CopyButtons extends StatelessWidget {
+  const _CopyButtons({required this.text});
   final String text;
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.copy, size: 18),
-      tooltip: 'Copy markdown',
-      onPressed: () {
-        Clipboard.setData(ClipboardData(text: text));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Markdown copied to clipboard'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      },
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.copy, size: 18),
+          tooltip: 'Copy markdown',
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: text));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Markdown copied to clipboard'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.content_paste, size: 18),
+          tooltip: 'Copy as rich text (for Word)',
+          onPressed: () => _copyAsHtml(context, text),
+        ),
+      ],
+    );
+  }
+
+  void _copyAsHtml(BuildContext context, String markdown) {
+    final html = md.markdownToHtml(markdown);
+    final htmlBlob = web.Blob(
+      [html.toJS].toJS,
+      web.BlobPropertyBag(type: 'text/html'),
+    );
+    final textBlob = web.Blob(
+      [markdown.toJS].toJS,
+      web.BlobPropertyBag(type: 'text/plain'),
+    );
+    final item = web.ClipboardItem(
+      {'text/html': htmlBlob, 'text/plain': textBlob}.jsify() as JSObject,
+    );
+    web.window.navigator.clipboard.write([item].toJS);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Rich text copied to clipboard'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 }
