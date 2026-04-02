@@ -179,7 +179,7 @@ class _CopyButtons extends StatelessWidget {
         ),
         IconButton(
           icon: const Icon(Icons.content_paste, size: 18),
-          tooltip: 'Copy as rich text (for Word)',
+          tooltip: 'Copy as rich text',
           onPressed: () => _copyAsHtml(context, text),
         ),
       ],
@@ -187,7 +187,17 @@ class _CopyButtons extends StatelessWidget {
   }
 
   void _copyAsHtml(BuildContext context, String markdown) {
-    final html = md.markdownToHtml(markdown);
+    final rawHtml = md.markdownToHtml(markdown);
+    // Wrap with inline styles so headings survive paste into Word/Google Docs.
+    final html =
+        '<div style="font-family:Calibri,sans-serif;font-size:11pt;">'
+        '$rawHtml</div>'
+        '<style>'
+        'h1{font-size:20pt;font-weight:bold;}'
+        'h2{font-size:16pt;font-weight:bold;}'
+        'h3{font-size:13pt;font-weight:bold;}'
+        'h4{font-size:11pt;font-weight:bold;}'
+        '</style>';
     final htmlBlob = web.Blob(
       [html.toJS].toJS,
       web.BlobPropertyBag(type: 'text/html'),
