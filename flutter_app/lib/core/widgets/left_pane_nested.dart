@@ -169,6 +169,7 @@ class _EnquiriesTree extends ConsumerWidget with BuildLogger {
             final n = (data['enquiryNumber'] ?? 'Unnumbered').toString();
             final isOpen = id == initiallyOpenEnquiryId;
             final isPublished = data['isPublished'] ?? false;
+            final isClosed = data['isOpen'] == false;
 
             return ExpansionTile(
               key: ValueKey('enq_${id}_$isOpen'),
@@ -190,6 +191,9 @@ class _EnquiriesTree extends ConsumerWidget with BuildLogger {
                 isUnread: UnreadDot(id, expanded: (isOpen && isPublished)),
                 selected: isOpen && initiallyOpenResponseId == null,
                 showSubtitle: isPublished == false,
+                leading: isClosed
+                    ? const Icon(Icons.lock, size: 14, color: Colors.grey)
+                    : null,
                 onTap: () {
                   TwoPaneScope.of(context)?.closeDrawer();
                   Nav.goEnquiry(context, id);
@@ -310,12 +314,14 @@ class _RowTile extends StatelessWidget {
     this.selected = false,
     this.showSubtitle = false,
     this.isUnread = const SizedBox.shrink(),
+    this.leading,
     this.onTap,
   });
   final String label;
   final bool selected;
   final bool showSubtitle;
   final Widget isUnread;
+  final Widget? leading;
   final VoidCallback? onTap;
 
   @override
@@ -330,6 +336,7 @@ class _RowTile extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (leading != null) ...[leading!, const SizedBox(width: 4)],
             Expanded(
               child: Text(
                 label,
