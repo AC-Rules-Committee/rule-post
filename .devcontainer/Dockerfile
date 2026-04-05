@@ -20,14 +20,15 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set JAVA_HOME
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+# Set JAVA_HOME (architecture-independent via symlink)
+RUN ln -s /usr/lib/jvm/java-17-openjdk-$(dpkg --print-architecture) /usr/lib/jvm/java-17-openjdk
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 
 # Install Flutter SDK as vscode user
 USER vscode
 WORKDIR /home/vscode
 
-# Download and install Flutter
+# Download and install Flutter (latest stable)
 RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1 /home/vscode/flutter
 
 # Add Flutter to PATH

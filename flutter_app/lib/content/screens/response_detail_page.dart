@@ -1,4 +1,5 @@
 // flutter_app/lib/content/screens/response_detail_page.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -122,6 +123,7 @@ class _ResponseDetailPageState extends ConsumerState<ResponseDetailPage> {
             data: (authors) => authors?[widget.responseId],
             orElse: () => null,
           );
+          final publishedAt = _fmtTimestamp(responseData['publishedAt']);
 
           final lockedComments =
               !isPublished ||
@@ -150,6 +152,7 @@ class _ResponseDetailPageState extends ConsumerState<ResponseDetailPage> {
             subHeaderLines: [
               'Rule Enquiry ${enquiryNumber.toString().padLeft(3, '0')}',
             ],
+            publishedAt: publishedAt,
             headerButton: _buildHeaderButton(
               context: context,
               ref: ref,
@@ -355,4 +358,33 @@ class _SubmitResponseButton extends ConsumerWidget {
       lockedReason: lockedReason,
     );
   }
+}
+
+const _months = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+String _fmtTimestamp(dynamic v) {
+  if (v == null) return '';
+  DateTime dt;
+  if (v is Timestamp) {
+    dt = v.toDate().toLocal();
+  } else if (v is DateTime) {
+    dt = v.toLocal();
+  } else {
+    return '';
+  }
+  return '${dt.day.toString().padLeft(2, '0')} ${_months[dt.month - 1]} ${dt.year} '
+      '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 }

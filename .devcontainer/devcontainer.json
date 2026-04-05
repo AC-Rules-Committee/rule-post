@@ -53,7 +53,7 @@
       "onAutoForward": "notify"
     },
     "8080": {
-      "label": "Firestore Emulator",
+      "label": "Flutter Web / Firestore Emulator",
       "onAutoForward": "notify"
     },
     "9099": {

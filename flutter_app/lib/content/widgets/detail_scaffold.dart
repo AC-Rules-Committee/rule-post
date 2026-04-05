@@ -19,6 +19,7 @@ class DetailScaffold extends StatelessWidget {
     this.subHeaderLines = const <String>[],
     this.headerButton,
     this.headerColour,
+    this.publishedAt,
     this.summary,
     this.summaryText,
     this.commentary,
@@ -34,6 +35,7 @@ class DetailScaffold extends StatelessWidget {
   final Widget? headerButton;
   final Color?
   headerColour; // allows the header to be coloured by author (for responses)
+  final String? publishedAt; // formatted publication date/time
   final Widget? meta; // usually MetaChips (+ optional status chips)
   final Widget? summary; // null => hide section
   final String? summaryText; // raw markdown for clipboard
@@ -73,6 +75,16 @@ class DetailScaffold extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (publishedAt != null && publishedAt!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Published $publishedAt',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
                 if (meta is Wrap && (meta as Wrap).children.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   meta!,

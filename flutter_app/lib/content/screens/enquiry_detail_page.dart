@@ -73,6 +73,7 @@ class _EnquiryDetailPageState extends ConsumerState<EnquiryDetailPage> {
         final stageStarts = (d['stageStarts'] as Timestamp?)?.toDate();
         final stageEnds = (d['stageEnds'] as Timestamp?)?.toDate();
         final fromRC = d['fromRC'] ?? false;
+        final publishedAt = _fmtTimestamp(d['publishedAt']);
 
         final isAdmin = userRole == 'admin';
         final isRC = userTeam == 'RC';
@@ -103,6 +104,7 @@ class _EnquiryDetailPageState extends ConsumerState<EnquiryDetailPage> {
           subHeaderLines: [
             'Rule Enquiry ${enquiryNumber.toString().padLeft(3, '0')}',
           ],
+          publishedAt: publishedAt,
           headerButton: isPublished
               ? null
               : Row(
@@ -208,3 +210,32 @@ final enquiryConclusionLabels = {
   'interpretation': 'Interpretation closed',
   'noResult': 'Enquiry closed with no result',
 };
+
+const _months = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+String _fmtTimestamp(dynamic v) {
+  if (v == null) return '';
+  DateTime dt;
+  if (v is Timestamp) {
+    dt = v.toDate().toLocal();
+  } else if (v is DateTime) {
+    dt = v.toLocal();
+  } else {
+    return '';
+  }
+  return '${dt.day.toString().padLeft(2, '0')} ${_months[dt.month - 1]} ${dt.year} '
+      '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+}
