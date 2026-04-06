@@ -1,5 +1,6 @@
 // flutter_app/lib/core/widgets/team_overview_panel.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:rule_post/api/admin_apis.dart'
     show
@@ -85,6 +86,28 @@ class _TeamOverviewPanelState extends State<TeamOverviewPanel> {
         _loading = false;
       });
     }
+  }
+
+  // ── Copy all emails to clipboard ──
+  void _copyAllEmails(BuildContext context) {
+    final teams = _teams;
+    if (teams == null || teams.isEmpty) return;
+
+    final emails =
+        teams.values
+            .expand((members) => members)
+            .map((m) => m.email)
+            .where((e) => e.isNotEmpty)
+            .toSet() // deduplicate
+            .toList()
+          ..sort();
+
+    if (emails.isEmpty) return;
+
+    Clipboard.setData(ClipboardData(text: emails.join('; ')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${emails.length} emails copied to clipboard')),
+    );
   }
 
   // ── Delete user ──
@@ -251,14 +274,21 @@ class _TeamOverviewPanelState extends State<TeamOverviewPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Refresh button
-        Align(
-          alignment: Alignment.centerRight,
-          child: IconButton(
-            onPressed: _loading ? null : _loadTeams,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-          ),
+        // Toolbar: Copy all emails + Refresh
+        Row(
+          children: [
+            FilledButton.icon(
+              onPressed: _loading ? null : () => _copyAllEmails(context),
+              icon: const Icon(Icons.copy, size: 18),
+              label: const Text('Copy all emails'),
+            ),
+            const Spacer(),
+            IconButton(
+              onPressed: _loading ? null : _loadTeams,
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Refresh',
+            ),
+          ],
         ),
         ...sortedTeams.map((team) {
           final members = teams[team]!;
