@@ -43,7 +43,7 @@ export async function publishResponses(
   // Copy docs into a mutable array
   const shuffled = [...unpublishedSnap.docs];
   // Guards
-  if (shuffled.length == 0) {
+  if (shuffled.length == 0 && isRcResponse) {
     return { success: false, publishedNumber: 0, failReason: "no-response" };
   } else if (isRcResponse && shuffled.length > 1) {
     return {
