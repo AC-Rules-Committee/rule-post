@@ -39,6 +39,29 @@ final markEnquiryReadProvider =
       if (isUnread && hasUnreadChild) {
         // use merge so we don't fail if the doc somehow doesn't exist
         await docRef.set({'isUnread': false}, SetOptions(merge: true));
+        return;
+      }
+
+      // 3) If only hasUnreadChild (no isUnread), verify descendants actually exist
+      if (!isUnread && hasUnreadChild) {
+        final col = firestore
+          .collection('user_data')
+          .doc(uid)
+          .collection('unreadPosts');
+        final c1 = await col
+          .where('isUnread', isEqualTo: true)
+          .where('parentId', isEqualTo: enquiryId)
+          .count()
+          .get();
+        final c2 = await col
+          .where('isUnread', isEqualTo: true)
+          .where('grandparentId', isEqualTo: enquiryId)
+          .count()
+          .get();
+        final unreadDescendants = (c1.count ?? 0) + (c2.count ?? 0);
+        if (unreadDescendants == 0) {
+          await docRef.delete();
+        }
       }
     } catch (e, st) {
       debugPrint('[markEnquiryRead] Failed to mark enquiry as read: $e\n$st');

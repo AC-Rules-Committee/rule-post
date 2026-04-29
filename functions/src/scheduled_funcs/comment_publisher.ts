@@ -56,6 +56,8 @@ export async function doCommentPublish(): Promise<void> {
       continue;
     }
 
+    let commentsPublishedForEnquiry = 0;
+
     const responsesSnap = await enquiryRef
       .collection("responses")
       .where("roundNumber", "==", roundNumber)
@@ -84,6 +86,7 @@ export async function doCommentPublish(): Promise<void> {
           commentNumber,
         });
         totalCommentsPublished += 1;
+        commentsPublishedForEnquiry += 1;
 
         // delete draft
         const team = await readAuthorTeam(c.ref);
@@ -115,7 +118,7 @@ export async function doCommentPublish(): Promise<void> {
         .get();
       writer.update(respDoc.ref, { commentCount: published.size });
 
-      // add unreadPost entries for users
+      // mark parent response as having unread child data
       await createUnreadForAllUsers(
         writer,
         "response",
@@ -141,15 +144,17 @@ export async function doCommentPublish(): Promise<void> {
       });
     }
 
-    // add unreadPost entries for users
-    await createUnreadForAllUsers(
-      writer,
-      "enquiry",
-      `RE #${enquiryDoc.data().enquiryNumber} - ${enquiryDoc.data().title}`,
-      enquiryDoc.id,
-      false,
-      {},
-    );
+    // mark parent enquiry as having unread child data (only if comments were published)
+    if (commentsPublishedForEnquiry > 0) {
+      await createUnreadForAllUsers(
+        writer,
+        "enquiry",
+        `RE #${enquiryDoc.data().enquiryNumber} - ${enquiryDoc.data().title}`,
+        enquiryDoc.id,
+        false,
+        {},
+      );
+    }
 
     processedEnquiries += 1;
   }

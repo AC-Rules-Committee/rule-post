@@ -187,7 +187,12 @@ export async function deleteUnreadForAllUsers(
   // Loop through users and delete the unreadPost doc
   for (const userDoc of usersSnap.docs) {
     const ref = userDoc.ref.collection("unreadPosts").doc(docId);
-    const parentId = (await ref.get()).get("parentId");
+    const docSnap = await ref.get();
+    if (!docSnap.exists) continue;
+    const parentId = docSnap.get("parentId");
+
+    // Delete the child doc first so sibling counts are accurate
+    await ref.delete();
 
     if (postType == "comment") {
       // check if parentDoc is unread
@@ -195,7 +200,7 @@ export async function deleteUnreadForAllUsers(
       const responseSnap = await responseRef.get();
       const responseIsUnread = responseSnap.get("isUnread") === true;
 
-      // check if this is the only child of the parent response
+      // check if there are remaining comment siblings under the parent response
       const siblingCount = await userDoc.ref
         .collection("unreadPosts")
         .where("postType", "==", "comment")
@@ -211,19 +216,18 @@ export async function deleteUnreadForAllUsers(
       const enquirySnap = await enquiryRef.get();
       const enquiryIsUnread = enquirySnap.get("isUnread") === true;
 
-      // check if the response is the only child of the grandparent enquiry
-      const piblingCount = await userDoc.ref
-        .collection("unreadPosts")
-        .where("postType", "==", "response")
-        .where("parentId", "==", grandparentId)
-        .get()
-        .then((snap) => snap.size);
-
-      // If this was the only child, and the response wasn't unread itself, delete the parent
-      if (siblingCount == 1 && parentId && !responseIsUnread) {
+      // If no remaining siblings, and the response wasn't unread itself, delete the parent
+      if (siblingCount == 0 && parentId && !responseIsUnread) {
         await responseRef.delete();
-        // If the parent was the only child of the enquiry, and the enquiry wasn't unread itself, delete the grandparent
-        if (piblingCount == 1 && grandparentId && !enquiryIsUnread) {
+        // Re-check piblings after deleting the response for an accurate count
+        const piblingCount = await userDoc.ref
+          .collection("unreadPosts")
+          .where("postType", "==", "response")
+          .where("parentId", "==", grandparentId)
+          .get()
+          .then((snap) => snap.size);
+        // If no remaining piblings, and the enquiry wasn't unread itself, delete the grandparent
+        if (piblingCount == 0 && grandparentId && !enquiryIsUnread) {
           await enquiryRef.delete();
         }
       }
@@ -234,7 +238,7 @@ export async function deleteUnreadForAllUsers(
       const enquirySnap = await enquiryRef.get();
       const enquiryIsUnread = enquirySnap.get("isUnread") === true;
 
-      // check if this is the only child of the parent enquiry
+      // check if there are remaining response siblings under the parent enquiry
       const siblingCount = await userDoc.ref
         .collection("unreadPosts")
         .where("postType", "==", "response")
@@ -242,12 +246,11 @@ export async function deleteUnreadForAllUsers(
         .get()
         .then((snap) => snap.size);
 
-      // If this was the only child, and the enquiry wasn't unread itself, delete the parent
-      if (siblingCount == 1 && parentId && !enquiryIsUnread) {
+      // If no remaining siblings, and the enquiry wasn't unread itself, delete the parent
+      if (siblingCount == 0 && parentId && !enquiryIsUnread) {
         await enquiryRef.delete();
       }
     }
-    await ref.delete();
   }
   return;
 }

@@ -135,15 +135,17 @@ export async function publishResponses(
     });
   }
 
-  // 4) mark parent enquiry as having unread child data
-  await createUnreadForAllUsers(
-    writer,
-    "enquiry",
-    `RE #${enquiryDoc.data()?.enquiryNumber} - ${enquiryDoc.data()?.title}`,
-    enquiryDoc.ref.id,
-    false,
-    {},
-  );
+  // 4) mark parent enquiry as having unread child data (only if responses were published)
+  if (totalResponsesPublished > 0) {
+    await createUnreadForAllUsers(
+      writer,
+      "enquiry",
+      `RE #${enquiryDoc.data()?.enquiryNumber} - ${enquiryDoc.data()?.title}`,
+      enquiryDoc.ref.id,
+      false,
+      {},
+    );
+  }
 
   return { success: true, publishedNumber: totalResponsesPublished };
 }
