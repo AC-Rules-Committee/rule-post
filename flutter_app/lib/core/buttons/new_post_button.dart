@@ -17,7 +17,6 @@ import 'package:rule_post/core/models/post_types.dart';
 import 'package:rule_post/core/models/types.dart' show NewPostPayload;
 import 'package:rule_post/riverpod/user_detail.dart';
 
-
 /// Used to create a new post, will be unpublished until scheduled function runs
 class NewPostButton extends ConsumerStatefulWidget {
   const NewPostButton({
@@ -38,7 +37,6 @@ class NewPostButton extends ConsumerStatefulWidget {
   @override
   ConsumerState<NewPostButton> createState() => _NewPostButtonState();
 }
-
 
 class _NewPostButtonState extends ConsumerState<NewPostButton> {
   final _tooltipKey = GlobalKey<TooltipState>();
@@ -64,7 +62,8 @@ class _NewPostButtonState extends ConsumerState<NewPostButton> {
           : 'New',
       child: Tooltip(
         key: _tooltipKey,
-        triggerMode: TooltipTriggerMode.longPress, // hover still works on desktop
+        triggerMode:
+            TooltipTriggerMode.longPress, // hover still works on desktop
         message: locked
             ? (widget.lockedReason ?? 'This action is currently locked.')
             : 'Create a new ${widget.type.singular}',
@@ -106,20 +105,16 @@ class _NewPostButtonState extends ConsumerState<NewPostButton> {
               parentIds: widget.parentIds,
               closeEnquiryOnPublish: payload.closeEnquiryOnPublish,
               enquiryConclusion: payload.enquiryConclusion,
-              );
-            
-            if (!context.mounted) return;
-            await createPost(
-              context,
-              createPostPayload,
             );
+
+            if (!context.mounted) return;
+            await createPost(context, createPostPayload);
           },
         ),
       ),
     );
   }
 }
-
 
 class NewPostDialog extends ConsumerStatefulWidget {
   const NewPostDialog({
@@ -143,13 +138,12 @@ class NewPostDialog extends ConsumerStatefulWidget {
   final String? initialText;
   final List<TempAttachment>? initialAttachments;
   final bool initialCloseEnquiryOnPublish;
-  final String? initialEnquiryConclusion; // "amendment", "interpretation", "noResult" or null
-
+  final String?
+  initialEnquiryConclusion; // "amendment", "interpretation", "noResult" or null
 
   @override
   ConsumerState<NewPostDialog> createState() => _NewPostDialogState();
 }
-
 
 class _NewPostDialogState extends ConsumerState<NewPostDialog> {
   final _form = GlobalKey<FormState>();
@@ -161,17 +155,16 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
   bool _closeEnquiryOnPublish = false;
   String? _enquiryConclusion; // "amendment", "interpretation", "noResult"
   final Map<String, double> _fileProgress = {}; // key = file path or name
-  double get _aggregateProgress =>
-      _fileProgress.isEmpty
-          ? 0
-          : _fileProgress.values.reduce((a, b) => a + b) / _fileProgress.length;
+  double get _aggregateProgress => _fileProgress.isEmpty
+      ? 0
+      : _fileProgress.values.reduce((a, b) => a + b) / _fileProgress.length;
 
   @override
   void initState() {
     super.initState();
 
     _title = TextEditingController(text: widget.initialTitle ?? '');
-    _text  = TextEditingController(text: widget.initialText ?? '');
+    _text = TextEditingController(text: widget.initialText ?? '');
 
     _pending = [...(widget.initialAttachments ?? const [])];
     _closeEnquiryOnPublish = widget.initialCloseEnquiryOnPublish;
@@ -188,7 +181,7 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
   @override
   Widget build(BuildContext context) {
     final canSubmit = !_busy && !_uploading;
-    
+
     // Show closure option only for RC users posting a response (not comment) or enquiry edits with conclusion
     final userTeam = ref.watch(teamProvider);
     final isRC = userTeam == 'RC';
@@ -197,129 +190,162 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
 
     return AlertDialog(
       title: Text(widget.dialogTitle),
-      content: Form(
-        key: _form,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.postType != 'comment') ...[
-                  TextFormField(
-                    controller: _title,
-                    decoration: InputDecoration(labelText: widget.postType == 'enquiry' ? 'Title' : 'Summary (optional)'),
-                    validator: (v) =>
-                        ((widget.postType == 'enquiry') && (v == null || v.trim().isEmpty)) ? 'Title is required' : null,
-                  ),
-                  const SizedBox(height: 12),
-                ],
+      content: SizedBox(
+        width: (MediaQuery.of(context).size.width * 0.85).clamp(300.0, 800.0),
+        child: Form(
+          key: _form,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.postType != 'comment') ...[
+                    TextFormField(
+                      controller: _title,
+                      decoration: InputDecoration(
+                        labelText: widget.postType == 'enquiry'
+                            ? 'Title'
+                            : 'Summary (optional)',
+                      ),
+                      validator: (v) =>
+                          ((widget.postType == 'enquiry') &&
+                              (v == null || v.trim().isEmpty))
+                          ? 'Title is required'
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   TextFormField(
                     controller: _text,
                     decoration: InputDecoration(
-                      labelText: widget.postType == 'comment' ? 'Comment' : 'Details',
+                      labelText: widget.postType == 'comment'
+                          ? 'Comment'
+                          : 'Details',
                       suffixIcon: _buildTextFieldSuffixIcon(),
-                      helperText: 'Markdown formatting is supported: **bold**, _italic_, `code`, etc.',
+                      helperText:
+                          'Markdown formatting is supported: **bold**, _italic_, `code`, etc.',
                       helperMaxLines: 2,
                     ),
-                    maxLines: 5,
+                    maxLines: null,
+                    minLines: 2,
+                    expands: false,
                     validator: (v) =>
-                        ((widget.postType == 'comment') && (v == null || v.trim().isEmpty)) ? 'Content is required' : null,
+                        ((widget.postType == 'comment') &&
+                            (v == null || v.trim().isEmpty))
+                        ? 'Content is required'
+                        : null,
                   ),
                   const SizedBox(height: 16),
-                if (showCloseOption) ...[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Tooltip(
-                      message: 'When published, this response will close the enquiry and prevent further submissions',
-                      child: CheckboxListTile(
-                        value: _closeEnquiryOnPublish,
-                        onChanged: (val) => setState(() => _closeEnquiryOnPublish = val ?? false),
-                        title: const Text('Close enquiry?'),
-                        contentPadding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
+                  if (showCloseOption) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Tooltip(
+                        message:
+                            'When published, this response will close the enquiry and prevent further submissions',
+                        child: CheckboxListTile(
+                          value: _closeEnquiryOnPublish,
+                          onChanged: (val) => setState(
+                            () => _closeEnquiryOnPublish = val ?? false,
+                          ),
+                          title: const Text('Close enquiry?'),
+                          contentPadding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (_closeEnquiryOnPublish) ...[
-                    DropdownButtonFormField<String>(
-                      initialValue: _enquiryConclusion,
-                      items: const [
-                        DropdownMenuItem(
-                          value: "amendment",
-                          child: Text('Amendment'),
-                        ),
-                        DropdownMenuItem(
-                          value: "interpretation",
-                          child: Text('Interpretation'),
-                        ),
-                        DropdownMenuItem(
-                          value: "noResult",
-                          child: Text('No result'),
-                        ),
-                      ],
-                      onChanged: (val) => setState(() => _enquiryConclusion = val),
-                      decoration: const InputDecoration(
-                        labelText: 'How did this enquiry conclude?',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) => _closeEnquiryOnPublish && v == null 
-                          ? 'Select a conclusion type' 
-                          : null,
                     ),
                     const SizedBox(height: 16),
-                  ],
-                ],
-                if (widget.postType != 'comment') ...[
-                  Row(
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _uploading ? null : _addAttachmentToTemp,
-                        icon: const Icon(Icons.attach_file),
-                        label: const Text('Add attachment'),
-                      ),
-                      const Spacer(),
-                      Tooltip(
-                        message: 'Note: large attachments may take a minute or two to upload',
-                        child: Icon(
-                          Icons.info_outline, 
-                          size: 18,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    if (_closeEnquiryOnPublish) ...[
+                      DropdownButtonFormField<String>(
+                        initialValue: _enquiryConclusion,
+                        items: const [
+                          DropdownMenuItem(
+                            value: "amendment",
+                            child: Text('Amendment'),
+                          ),
+                          DropdownMenuItem(
+                            value: "interpretation",
+                            child: Text('Interpretation'),
+                          ),
+                          DropdownMenuItem(
+                            value: "noResult",
+                            child: Text('No result'),
+                          ),
+                        ],
+                        onChanged: (val) =>
+                            setState(() => _enquiryConclusion = val),
+                        decoration: const InputDecoration(
+                          labelText: 'How did this enquiry conclude?',
+                          border: OutlineInputBorder(),
                         ),
+                        validator: (v) => _closeEnquiryOnPublish && v == null
+                            ? 'Select a conclusion type'
+                            : null,
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(height: 16),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  if (_uploading) ...[
-                    const SizedBox(height: 12),
-                    LinearProgressIndicator(value: _aggregateProgress == 0 ? null : _aggregateProgress),
-                    const SizedBox(height: 4),
-                    Text(
-                      _fileProgress.isEmpty
-                        ? 'Preparing uploads...'
-                        : 'Uploading ${_fileProgress.length} file(s): ${(100*_aggregateProgress).toStringAsFixed(0)}%',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
                   ],
-                ],
-                if (_pending.isNotEmpty)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _pending
-                          .map((a) => InputChip(
+                  if (widget.postType != 'comment') ...[
+                    Row(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _uploading ? null : _addAttachmentToTemp,
+                          icon: const Icon(Icons.attach_file),
+                          label: const Text('Add attachment'),
+                        ),
+                        const Spacer(),
+                        Tooltip(
+                          message:
+                              'Note: large attachments may take a minute or two to upload',
+                          child: Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (_uploading) ...[
+                      const SizedBox(height: 12),
+                      LinearProgressIndicator(
+                        value: _aggregateProgress == 0
+                            ? null
+                            : _aggregateProgress,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _fileProgress.isEmpty
+                            ? 'Preparing uploads...'
+                            : 'Uploading ${_fileProgress.length} file(s): ${(100 * _aggregateProgress).toStringAsFixed(0)}%',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ],
+                  if (_pending.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _pending
+                            .map(
+                              (a) => InputChip(
                                 label: Text(a.name),
                                 onDeleted: () =>
                                     setState(() => _pending.remove(a)),
-                              ))
-                          .toList(),
+                              ),
+                            )
+                            .toList(),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -333,12 +359,23 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
           onPressed: canSubmit
               ? () async {
                   if (!(_form.currentState?.validate() ?? false)) return;
-                  if (widget.postType == 'enquiry' && _text.text.trim().isEmpty && _pending.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No details or attachments provided.')));
+                  if (widget.postType == 'enquiry' &&
+                      _text.text.trim().isEmpty &&
+                      _pending.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No details or attachments provided.'),
+                      ),
+                    );
                     return;
                   }
-                  if (widget.postType == 'response' && _title.text.trim().isEmpty && _text.text.trim().isEmpty && _pending.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No input provided.')));
+                  if (widget.postType == 'response' &&
+                      _title.text.trim().isEmpty &&
+                      _text.text.trim().isEmpty &&
+                      _pending.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No input provided.')),
+                    );
                     return;
                   }
                   setState(() => _busy = true);
@@ -356,16 +393,17 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
                   }
                 }
               : null,
-            child: _busy
-            ? const CircularProgressIndicator()
-            : Text(widget.initialTitle != null || widget.initialText != null
-                ? 'Save changes'
-                : 'Create'),
+          child: _busy
+              ? const CircularProgressIndicator()
+              : Text(
+                  widget.initialTitle != null || widget.initialText != null
+                      ? 'Save changes'
+                      : 'Create',
+                ),
         ),
       ],
     );
   }
-
 
   Future<void> _addAttachmentToTemp() async {
     if (_uploading) return;
@@ -407,8 +445,10 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
             errors.add('${f.name}: $e');
           }
         }
-        if (success > 0) _toast('Uploaded $success file${success == 1 ? '' : 's'}.');
-        if (errors.isNotEmpty) _toast('Some files failed:\n${errors.join('\n')}');
+        if (success > 0)
+          _toast('Uploaded $success file${success == 1 ? '' : 's'}.');
+        if (errors.isNotEmpty)
+          _toast('Some files failed:\n${errors.join('\n')}');
         return;
       }
 
@@ -435,21 +475,31 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
         for (var i = 0; i < webFiles.length; i += maxConcurrent) {
           final batch = webFiles.sublist(
             i,
-            (i + maxConcurrent > webFiles.length) ? webFiles.length : i + maxConcurrent,
+            (i + maxConcurrent > webFiles.length)
+                ? webFiles.length
+                : i + maxConcurrent,
           );
 
-          await Future.wait(batch.map((f) async {
-            try {
-              await _uploadOneWebBlobWithProgress(uid, f, onProgress: onProgress);
-              success++;
-            } catch (e) {
-              errors.add('${f.name}: $e');
-            }
-          }));
+          await Future.wait(
+            batch.map((f) async {
+              try {
+                await _uploadOneWebBlobWithProgress(
+                  uid,
+                  f,
+                  onProgress: onProgress,
+                );
+                success++;
+              } catch (e) {
+                errors.add('${f.name}: $e');
+              }
+            }),
+          );
         }
 
-        if (success > 0) _toast('Uploaded $success file${success == 1 ? '' : 's'}.');
-        if (errors.isNotEmpty) _toast('Some files failed:\n${errors.join('\n')}');
+        if (success > 0)
+          _toast('Uploaded $success file${success == 1 ? '' : 's'}.');
+        if (errors.isNotEmpty)
+          _toast('Some files failed:\n${errors.join('\n')}');
       } finally {
         // Clear progress + uploading flag
         setState(() {
@@ -458,7 +508,8 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
         });
       }
 
-      if (success > 0) _toast('Uploaded $success file${success == 1 ? '' : 's'}.');
+      if (success > 0)
+        _toast('Uploaded $success file${success == 1 ? '' : 's'}.');
       if (errors.isNotEmpty) _toast('Some files failed:\n${errors.join('\n')}');
     } catch (e) {
       _toast('Attachment failed: $e');
@@ -466,7 +517,6 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
       if (mounted) setState(() => _uploading = false);
     }
   }
-
 
   Future<List<web.File>?> _pickWebFiles({
     String accept = '',
@@ -504,7 +554,8 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
   /// Build suffix icon for text field showing markdown formatting help
   Widget? _buildTextFieldSuffixIcon() {
     return Tooltip(
-      message: 'Markdown formatting supported:\n'
+      message:
+          'Markdown formatting supported:\n'
           '**bold**, _italic_, ***bold+italic***,\n'
           '`code`, # Headers, - lists, > quotes',
       showDuration: const Duration(seconds: 5),
@@ -515,8 +566,9 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
   void _toast(String msg) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 
-  String _sanitiseName(String name) =>
-      name.replaceAll(RegExp(r'[^\w.\-+]'), '_').substring(0, name.length.clamp(0, 200));
+  String _sanitiseName(String name) => name
+      .replaceAll(RegExp(r'[^\w.\-+]'), '_')
+      .substring(0, name.length.clamp(0, 200));
 
   String? _guessContentType(String ext) {
     switch (ext) {
@@ -540,10 +592,9 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
     }
   }
 
-
   Future<void> _uploadOneFile(String uid, PlatformFile f) async {
     final bytes = f.bytes; // present on web (withData: true)
-    final path = f.path;   // present on mobile/desktop
+    final path = f.path; // present on mobile/desktop
     if (bytes == null && (path == null || path.isEmpty)) {
       throw 'Could not read file bytes or path.';
     }
@@ -562,17 +613,21 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
     if (kIsWeb || bytes != null) {
       await ref.putData(bytes!, SettableMetadata(contentType: contentType));
     } else {
-      await ref.putFile(File(path!), SettableMetadata(contentType: contentType));
+      await ref.putFile(
+        File(path!),
+        SettableMetadata(contentType: contentType),
+      );
     }
 
-    _pending.add(TempAttachment(
-      name: name,
-      storagePath: tempPath,
-      size: size,
-      contentType: contentType,
-    ));
+    _pending.add(
+      TempAttachment(
+        name: name,
+        storagePath: tempPath,
+        size: size,
+        contentType: contentType,
+      ),
+    );
   }
-
 
   Future<void> _uploadOneWebBlobWithProgress(
     String uid,
@@ -583,7 +638,8 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
     final size = f.size;
     final browserType = f.type.isNotEmpty ? f.type : null;
     final ext = name.contains('.') ? name.split('.').last.toLowerCase() : '';
-    final contentType = browserType ?? _guessContentType(ext) ?? 'application/octet-stream';
+    final contentType =
+        browserType ?? _guessContentType(ext) ?? 'application/octet-stream';
 
     final ts = DateTime.now().millisecondsSinceEpoch;
     final safeName = _sanitiseName(name);
@@ -603,11 +659,13 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
       await sub.cancel();
     }
 
-    _pending.add(TempAttachment(
-      name: name,
-      storagePath: tempPath,
-      size: size,
-      contentType: contentType,
-    ));
+    _pending.add(
+      TempAttachment(
+        name: name,
+        storagePath: tempPath,
+        size: size,
+        contentType: contentType,
+      ),
+    );
   }
 }
