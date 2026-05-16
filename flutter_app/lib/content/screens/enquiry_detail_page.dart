@@ -179,6 +179,7 @@ class _EnquiryDetailPageState extends ConsumerState<EnquiryDetailPage> {
                       enquiryId: widget.enquiryId,
                       loadCurrent: () => getStageLength(widget.enquiryId),
                       enabled: isOpen,
+                      canTerminate: teamsCanRespond && isOpen && isPublished,
                       context: context,
                     ),
                     AdminAction.publishCompetitorResponses(

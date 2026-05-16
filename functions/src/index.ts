@@ -52,6 +52,7 @@ export {
 /** ─────────────────────────────── Admin ─────────────────────────────── */
 export { changeStageLength } from "./admin_funcs/change_stage_length";
 export { closeEnquiry } from "./admin_funcs/close_enquiry";
+export { terminateStage } from "./admin_funcs/terminate_stage";
 export { getPostAuthorsForEnquiry } from "./admin_funcs/get_post_authors";
 export { inviteTeamAdmin } from "./admin_funcs/invite_team_admin";
 export {

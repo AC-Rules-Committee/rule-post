@@ -91,15 +91,34 @@ class AdminAction {
     required String enquiryId,
     required Future<int> Function() loadCurrent,
     required bool enabled,
+    bool canTerminate = false,
     required BuildContext context,
   }) {
     return AdminAction(
       label: 'Change Stage Length',
       icon: Icons.timer,
-      tooltip: enabled ? 'Change number of working days for major enquiry stages (default: 4)' : 'Locked: Enquiry closed',
+      tooltip: enabled ? 'Change stage length or terminate the current stage' : 'Locked: Enquiry closed',
       enabled: enabled,
-      buildAndGetArgs: (ctx) async { return promptStageLength(ctx, loadCurrent: loadCurrent, min: 1, max: 30); },
-      runWithArgs: (args) async { changeStageLength(context, enquiryId, args); }
+      buildAndGetArgs: (ctx) async {
+        return promptStageLength(
+          ctx,
+          loadCurrent: loadCurrent,
+          min: 1,
+          max: 30,
+          canTerminate: canTerminate,
+        );
+      },
+      runWithArgs: (args) async {
+        if (args is ChangeLength) {
+          changeStageLength(context, enquiryId, args.newLength);
+        } else if (args is TerminateStage) {
+          terminateCompetitorResponseStage(
+            context,
+            enquiryId,
+            publishPendingResponses: args.publishPendingResponses,
+          );
+        }
+      },
     );   
   }
 

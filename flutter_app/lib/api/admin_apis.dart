@@ -60,6 +60,26 @@ Future<void> markPostUnread(
   );
 }
 
+// Allows RC to immediately terminate the competitor response stage
+Future<void> terminateCompetitorResponseStage(
+  BuildContext context,
+  String enquiryId, {
+  required bool publishPendingResponses,
+}) async {
+  await api.callWithProgress<Json>(
+    context: context,
+    name: 'terminateStage',
+    data: {
+      'enquiryId': enquiryId.trim(),
+      'publishPendingResponses': publishPendingResponses,
+    },
+    successBuilder: (res) => publishPendingResponses
+        ? 'Competitor response stage terminated. ${res['num_published']} responses published.'
+        : 'Competitor response stage terminated without publishing responses.',
+    failureBuilder: (res) => 'Failed to terminate stage: ${res['reason']}.',
+  );
+}
+
 // Allows RC to publish Competitor responses earlier than scheduled
 Future<void> publishCompetitorResponses(
   BuildContext context,

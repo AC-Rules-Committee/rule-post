@@ -151,6 +151,11 @@ export interface PublishResult {
   publishedNumber: number;
 }
 
+export type terminateStagePayload = {
+  enquiryId: string;
+  publishPendingResponses: boolean;
+};
+
 export type CloseEnquiryPayload = {
   enquiryId: string;
   enquiryConclusion: EnquiryConclusion;
