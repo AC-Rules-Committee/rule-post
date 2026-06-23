@@ -137,6 +137,39 @@ void main() {
 
 ---
 
+## Strikethrough
+
+Use double tildes around text to ~~strike it through~~.
+
+```
+~~This text is struck through~~
+```
+
+**Result:** ~~This text is struck through~~
+
+---
+
+## Tables
+
+Create tables using pipes (`|`) to separate columns and a row of dashes to
+separate the header from the body.
+
+```
+| Rule | Old Value | New Value |
+| ---- | --------- | --------- |
+| Subs | 45 min    | 60 min    |
+| Days | Saturday  | Any day   |
+```
+
+**Result:**
+
+| Rule | Old Value | New Value |
+| ---- | --------- | --------- |
+| Subs | 45 min    | 60 min    |
+| Days | Saturday  | Any day   |
+
+---
+
 ## Common Use Cases
 
 ### Highlighting Amendments or Changes
@@ -181,10 +214,7 @@ Code compliance: `RULE_AMENDMENT_2024_v2`
 
 The following markdown features are **not** currently supported:
 
-- ❌ Links (hyperlinks)
 - ❌ Images
-- ❌ Tables
-- ❌ Strikethrough
 - ❌ Inline HTML
 - ❌ Text color/styling (see below)
 

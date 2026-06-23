@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
 // special tile for comments, which can be expanded/collapsed if the text is long
@@ -191,6 +192,7 @@ class _ListTileCollapsibleTextState extends State<ListTileCollapsibleText>
         data: text,
         selectable: false,
         shrinkWrap: true,
+        extensionSet: md.ExtensionSet.gitHubFlavored,
         styleSheet: _buildMarkdownStyle(baseStyle),
         onTapLink: (textLabel, href, title) async {
           if (href == null) return;
@@ -217,6 +219,7 @@ class _ListTileCollapsibleTextState extends State<ListTileCollapsibleText>
       p: baseStyle,
       em: baseStyle.copyWith(fontStyle: FontStyle.italic),
       strong: baseStyle.copyWith(fontWeight: FontWeight.bold),
+      del: baseStyle.copyWith(decoration: TextDecoration.lineThrough),
       code: baseStyle.copyWith(
         fontFamily: 'monospace',
         fontSize: baseStyle.fontSize != null ? baseStyle.fontSize! * 0.9 : null,
@@ -237,6 +240,11 @@ class _ListTileCollapsibleTextState extends State<ListTileCollapsibleText>
       RegExp(r'^\s*[-*+]\s'), // - lists
       RegExp(r'^\s*\d+\.\s'), // 1. numbered lists
       RegExp(r'>.+'), // > blockquotes
+      RegExp(r'~~.+?~~'), // ~~strikethrough~~
+      RegExp(
+        r'^(?=.*\|)(?=.*-)[\s|:-]+$',
+        multiLine: true,
+      ), // | table | delimiter row
       RegExp(r'https?:\/\/\S+'), // bare URLs like https://example.com
     ];
 

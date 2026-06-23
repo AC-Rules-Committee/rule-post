@@ -199,7 +199,10 @@ class _CopyButtons extends StatelessWidget {
   }
 
   void _copyAsHtml(BuildContext context, String markdown) {
-    final rawHtml = md.markdownToHtml(markdown);
+    final rawHtml = md.markdownToHtml(
+      markdown,
+      extensionSet: md.ExtensionSet.gitHubFlavored,
+    );
     // Wrap with inline styles so headings survive paste into Word/Google Docs.
     final html =
         '<div style="font-family:Calibri,sans-serif;font-size:11pt;">'

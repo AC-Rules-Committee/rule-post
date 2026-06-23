@@ -556,8 +556,8 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
     return Tooltip(
       message:
           'Markdown formatting supported:\n'
-          '**bold**, _italic_, ***bold+italic***,\n'
-          '`code`, # Headers, - lists, > quotes',
+          '**bold**, _italic_, ***bold+italic***, ~~strikethrough~~,\n'
+          '`code`, # Headers, - lists, > quotes, tables',
       showDuration: const Duration(seconds: 5),
       child: Icon(Icons.info_outline, size: 18),
     );

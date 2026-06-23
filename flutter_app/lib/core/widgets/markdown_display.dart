@@ -1,6 +1,7 @@
 // flutter_app/lib/core/widgets/markdown_display.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
 /// A widget that displays text as rendered markdown.
@@ -54,6 +55,7 @@ class MarkdownDisplay extends StatelessWidget {
       // continue to fire, then opt into copy support with SelectionArea.
       selectable: false,
       shrinkWrap: true,
+      extensionSet: md.ExtensionSet.gitHubFlavored,
       styleSheet: _buildStyleSheet(context),
       onTapLink: (textLabel, href, title) async {
         if (href == null) return;
@@ -104,6 +106,11 @@ class MarkdownDisplay extends StatelessWidget {
       strong:
           textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold) ??
           const TextStyle(fontWeight: FontWeight.bold),
+      del:
+          textTheme.bodyMedium?.copyWith(
+            decoration: TextDecoration.lineThrough,
+          ) ??
+          const TextStyle(decoration: TextDecoration.lineThrough),
       code: TextStyle(
         fontFamily: 'monospace',
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
@@ -155,6 +162,11 @@ class MarkdownDisplay extends StatelessWidget {
       RegExp(r'^\s*[-*+]\s'), // - lists
       RegExp(r'^\s*\d+\.\s'), // 1. numbered lists
       RegExp(r'>.+'), // > blockquotes
+      RegExp(r'~~.+?~~'), // ~~strikethrough~~
+      RegExp(
+        r'^(?=.*\|)(?=.*-)[\s|:-]+$',
+        multiLine: true,
+      ), // | table | delimiter row
       RegExp(r'https?:\/\/\S+'), // bare URLs like https://example.com
     ];
 

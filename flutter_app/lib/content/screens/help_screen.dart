@@ -98,7 +98,7 @@ class HelpFaqScreen extends StatelessWidget {
           },
           {"question": "Can I use markdown formatting in my post?",
             "answer":
-                "Yes. The following markdown syntax is supported; italics, bold text, lists, headers, blockquotes and code blocks."},
+                "Yes. The following markdown syntax is supported; italics, bold text, strikethrough, lists, headers, blockquotes, tables and code blocks."},
         ]
       },
 
