@@ -445,10 +445,12 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
             errors.add('${f.name}: $e');
           }
         }
-        if (success > 0)
+        if (success > 0) {
           _toast('Uploaded $success file${success == 1 ? '' : 's'}.');
-        if (errors.isNotEmpty)
+        }
+        if (errors.isNotEmpty) {
           _toast('Some files failed:\n${errors.join('\n')}');
+        }
         return;
       }
 
@@ -496,10 +498,12 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
           );
         }
 
-        if (success > 0)
+        if (success > 0) {
           _toast('Uploaded $success file${success == 1 ? '' : 's'}.');
-        if (errors.isNotEmpty)
+        }
+        if (errors.isNotEmpty) {
           _toast('Some files failed:\n${errors.join('\n')}');
+        }
       } finally {
         // Clear progress + uploading flag
         setState(() {
@@ -507,10 +511,6 @@ class _NewPostDialogState extends ConsumerState<NewPostDialog> {
           _fileProgress.clear();
         });
       }
-
-      if (success > 0)
-        _toast('Uploaded $success file${success == 1 ? '' : 's'}.');
-      if (errors.isNotEmpty) _toast('Some files failed:\n${errors.join('\n')}');
     } catch (e) {
       _toast('Attachment failed: $e');
     } finally {

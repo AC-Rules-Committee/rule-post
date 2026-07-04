@@ -74,8 +74,9 @@ final class PostPayload {
     switch (postType) {
       case PostType.enquiry:
         if (!isEdit) {
-          if (normTitle == null)
+          if (normTitle == null) {
             throw ArgumentError('Enquiry requires a title.');
+          }
           if (!hasText && safeAtts.isEmpty) {
             throw ArgumentError('Enquiry requires text or attachments.');
           }
