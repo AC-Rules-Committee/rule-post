@@ -51,7 +51,8 @@ export const sendPasswordReset = onCall(
     if (!isSiteAdmin) {
       const callerTeam = req.auth?.token.team as string | undefined;
       const targetClaims = targetUser.customClaims ?? {};
-      if (callerTeam && targetClaims.team !== callerTeam) {
+      // Fail closed: a caller without a team claim must not bypass the check.
+      if (!callerTeam || targetClaims.team !== callerTeam) {
         throw new HttpsError(
           "permission-denied",
           "You can only reset passwords for members of your own team.",

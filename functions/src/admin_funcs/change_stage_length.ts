@@ -10,6 +10,7 @@ import { createTransport } from "nodemailer";
 
 import { REGION, MEMORY, TIMEOUT_SECONDS, ROME_TZ } from "../common/config";
 import { changeStageLengthPayload, UserData } from "../common/types";
+import { sendBccInChunks } from "../utils/email_batch";
 import { offsetByWorkingDays } from "../utils/offset_by_working_days";
 
 const db = getFirestore();
@@ -161,10 +162,11 @@ async function notifyStageLengthChanged(params: {
   });
   const fromAddress = `"Rule Post" <${process.env.GMAIL_USER}>`;
 
-  await transporter.sendMail({
+  // Chunked BCC to stay under Gmail's per-message recipient limit.
+  await sendBccInChunks(transporter, {
     from: fromAddress,
     to: fromAddress,
-    bcc: recipients.join(", "),
+    bcc: recipients,
     subject,
     html,
   });

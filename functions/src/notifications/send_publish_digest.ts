@@ -19,6 +19,7 @@ import {
   CommentParams,
   UserData,
 } from "../common/types";
+import { sendBccInChunks } from "../utils/email_batch";
 
 const db = getFirestore();
 
@@ -453,10 +454,10 @@ async function sendDigestFor(
     const html = renderDigestHTML(emailGroups, expiringDeadlines);
 
     try {
-      await transporter.sendMail({
+      await sendBccInChunks(transporter, {
         from: fromAddress,
         to: fromAddress,
-        bcc: teamData.emails.join(", "),
+        bcc: teamData.emails,
         subject,
         html,
       });
@@ -598,22 +599,63 @@ export const onCommentIsPublishedUpdated = onDocumentUpdated(
 
 /* ───────────────────── scheduler (send digest) ───────────────────── */
 
+// Lease-based lock so overlapping digest runs (scheduled + 2-minute catch-up)
+// cannot read the same unprocessed events and send duplicate emails.
+const digestLockRef = db.collection("app_data").doc("digest_lock");
+// Must exceed the function timeout (120s) so a crashed run's lease expires.
+const DIGEST_LOCK_LEASE_MS = 5 * 60 * 1000;
+
+async function acquireDigestLock(): Promise<boolean> {
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(digestLockRef);
+    const lockedAt = snap.exists
+      ? (snap.get("lockedAt") as Timestamp | null | undefined)
+      : undefined;
+    if (lockedAt && Date.now() - lockedAt.toMillis() < DIGEST_LOCK_LEASE_MS) {
+      return false; // another run holds a live lease
+    }
+    tx.set(digestLockRef, { lockedAt: Timestamp.now() });
+    return true;
+  });
+}
+
+async function releaseDigestLock(): Promise<void> {
+  try {
+    await digestLockRef.set({ lockedAt: null });
+  } catch (e) {
+    // Non-fatal: the lease will expire on its own.
+    logger.warn("[doSendPublishDigest] Failed to release digest lock", {
+      error: e,
+    });
+  }
+}
+
 /** Helper function extracted for use by orchestrator */
 export async function doSendPublishDigest(): Promise<void> {
-  const now = Timestamp.now();
-  const snap = await db
-    .collection("publishEvents")
-    .where("processed", "==", false)
-    .where("publishedAt", "<=", now)
-    .orderBy("publishedAt", "asc")
-    .limit(500)
-    .get();
+  if (!(await acquireDigestLock())) {
+    logger.info(
+      "[doSendPublishDigest] Another digest run holds the lock; skipping.",
+    );
+    return;
+  }
+  try {
+    const now = Timestamp.now();
+    const snap = await db
+      .collection("publishEvents")
+      .where("processed", "==", false)
+      .where("publishedAt", "<=", now)
+      .orderBy("publishedAt", "asc")
+      .limit(500)
+      .get();
 
-  // type-annotate here so .data() is strongly typed above
-  const docs =
-    snap.docs as FirebaseFirestore.QueryDocumentSnapshot<PublishEventData>[];
-  await sendDigestFor(docs);
-  logger.info("Digest processed", { count: snap.size });
+    // type-annotate here so .data() is strongly typed above
+    const docs =
+      snap.docs as FirebaseFirestore.QueryDocumentSnapshot<PublishEventData>[];
+    await sendDigestFor(docs);
+    logger.info("Digest processed", { count: snap.size });
+  } finally {
+    await releaseDigestLock();
+  }
 }
 
 // ✅ Note: sendPublishDigest is no longer exported directly.
