@@ -1,0 +1,18 @@
+# Rule Post
+
+> Rule Post is the home of America's Cup rule enquiries. Competing teams submit
+> rule enquiries which are answered by the Rules Committee (RC). Published
+> enquiries, team responses and comments are public.
+
+The site itself is a Flutter web app rendered to canvas, so its HTML contains no
+content. All published content is available as markdown at the endpoints below.
+
+## Content
+
+- [Published enquiries index](https://rulepost-c52d6.web.app/api/public/enquiries.md): list of all published rule enquiries, each linking to a full markdown thread
+- Individual enquiry threads (enquiry, responses, comments and attachment links): https://rulepost-c52d6.web.app/api/public/enquiries/{id}.md
+
+## Notes
+
+- Only published content is available; drafts and internal data are not exposed.
+- Attachments (PDF/Word) are linked from each thread.

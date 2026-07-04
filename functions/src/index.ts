@@ -66,3 +66,4 @@ export { responseInstantPublisher } from "./admin_funcs/response_instant_publish
 export { testSendDigest } from "./admin_funcs/test_send_digest";
 
 /** ─────────────────────────────── Utils ─────────────────────────────── */
+export { publicMarkdown } from "./utils/public_markdown";
