@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Machine-readable published content (this site is a Flutter/canvas app):
+# LLM guide:            /llms.txt
+# Enquiries (markdown): /api/public/enquiries.md

@@ -20,6 +20,12 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="the home of America's Cup rule enquiries">
 
+  <!-- LLM / AI-agent discovery: this is a Flutter (canvas) web app, so the DOM
+       carries no content. Machine-readable published content is served as
+       markdown. See /llms.txt for the index of endpoints. -->
+  <link rel="alternate" type="text/markdown" title="LLM-readable site guide" href="/llms.txt">
+  <link rel="alternate" type="text/markdown" title="Published rule enquiries (markdown)" href="/api/public/enquiries.md">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -33,6 +39,17 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!-- Fallback content for crawlers / AI agents that do not execute JavaScript.
+       Real users get the Flutter app; this block is only shown without JS. -->
+  <noscript>
+    <h1>Rule Post — the home of America's Cup rule enquiries</h1>
+    <p>This site is an interactive app. Machine-readable published content is
+       available as markdown:</p>
+    <ul>
+      <li><a href="/llms.txt">/llms.txt</a> — guide to the available endpoints</li>
+      <li><a href="/api/public/enquiries.md">/api/public/enquiries.md</a> — index of published rule enquiries, each linking to a full markdown thread</li>
+    </ul>
+  </noscript>
   <!-- Unregister stale service workers so fresh deploys load immediately -->
   <script>
     if ('serviceWorker' in navigator) {
